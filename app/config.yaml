@@ -1,0 +1,31 @@
+project:
+  name: SolonInsight
+  timezone: Europe/Stockholm
+
+output:
+  data_dir: data
+  latest_file: latest.json
+  history_file: history.csv
+
+modes:
+  daily:
+    description: "Fast-moving market and liquidity checks"
+  weekly:
+    description: "Credit trends and claims"
+  monthly:
+    description: "Macro indicators"
+
+status_levels:
+  green:
+    label: "STABLE"
+  yellow:
+    label: "CAUTION"
+  red:
+    label: "ELEVATED RISK"
+
+scoring:
+  green_max: 2
+  yellow_max: 5
+
+mock:
+  enabled: false
