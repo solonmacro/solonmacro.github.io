@@ -15,6 +15,30 @@ except ImportError:
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 APP_DIR = os.path.dirname(__file__)
 
+def load_env_file(env_path):
+    """
+    Load .env file and set environment variables.
+    Simple parser: handles KEY=VALUE lines, ignores comments and blanks.
+    """
+    if not os.path.exists(env_path):
+        return
+    
+    try:
+        with open(env_path, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if "=" in line:
+                    key, value = line.split("=", 1)
+                    key = key.strip()
+                    value = value.strip()
+                    # Only set if not already in environment (env vars take precedence)
+                    if key not in os.environ:
+                        os.environ[key] = value
+    except Exception as e:
+        print(f"[WARN] Could not load .env file: {e}")
+
 def load_config():
     path = os.path.join(APP_DIR, "config.yaml")
     with open(path, "r") as f:
@@ -106,13 +130,17 @@ def run_dashboard(mode):
     Fetch enabled indicators and write to latest.json.
     Uses atomic write: temp file → rename.
     """
+    # Load .env file from repo root
+    env_path = os.path.join(BASE_DIR, ".env")
+    load_env_file(env_path)
+    
     cfg = load_config()
     
     out_cfg = cfg["output"]
     data_dir = os.path.join(BASE_DIR, out_cfg["data_dir"])
     ensure_dir(data_dir)
     
-    # Get API key from environment
+    # Get API key from environment (.env or system env vars)
     fred_api_key = os.environ.get("FRED_API_KEY")
     
     # Build indicators array
