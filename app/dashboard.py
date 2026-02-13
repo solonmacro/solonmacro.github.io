@@ -78,6 +78,25 @@ def fetch_fred_series(series_id, api_key, timeout=15, max_retries=2):
     for attempt in range(max_retries):
         try:
             resp = requests.get(url, params=params, timeout=timeout)
+            
+            # Check HTTP status
+            if resp.status_code == 400:
+                return None, None, "FRED API: Invalid request (check series_id)"
+            elif resp.status_code == 401:
+                return None, None, "FRED API: Invalid API key (set FRED_API_KEY)"
+            elif resp.status_code == 429:
+                error_msg = f"FRED API: Rate limited (attempt {attempt+1}/{max_retries})"
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** (attempt + 2))
+                    continue
+                return None, None, error_msg
+            elif resp.status_code >= 400:
+                error_msg = f"FRED API: HTTP {resp.status_code} (attempt {attempt+1}/{max_retries})"
+                if 500 <= resp.status_code < 600 and attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)
+                    continue
+                return None, None, error_msg
+            
             resp.raise_for_status()
             data = resp.json()
             
@@ -101,17 +120,23 @@ def fetch_fred_series(series_id, api_key, timeout=15, max_retries=2):
         except requests.exceptions.Timeout:
             error_msg = f"FRED API timeout (attempt {attempt+1}/{max_retries})"
             if attempt < max_retries - 1:
-                time.sleep(2 ** attempt)  # exponential backoff
+                time.sleep(2 ** attempt)
                 continue
             return None, None, error_msg
-        except requests.exceptions.RequestException as e:
-            error_msg = f"FRED API error: {str(e)}"
+        except requests.exceptions.ConnectionError as e:
+            error_msg = f"FRED API: Connection error (attempt {attempt+1}/{max_retries})"
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)
                 continue
             return None, None, error_msg
-        except json.JSONDecodeError:
-            return None, None, "Invalid JSON response from FRED"
+        except requests.exceptions.RequestException as e:
+            return None, None, f"FRED API error: {str(e)}"
+        except (json.JSONDecodeError, ValueError) as e:
+            error_msg = f"Invalid JSON from FRED: {str(e)} (attempt {attempt+1}/{max_retries})"
+            if attempt < max_retries - 1:
+                time.sleep(1)
+                continue
+            return None, None, error_msg
     
     return None, None, "Max retries exceeded"
 
