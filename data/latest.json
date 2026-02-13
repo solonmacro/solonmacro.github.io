@@ -1,0 +1,21 @@
+{
+  "project": "SolonInsight",
+  "mode": "daily",
+  "timestamp": "2026-02-13T10:30:00Z",
+  "indicators": [
+    {
+      "key": "unrate",
+      "label": "Unemployment Rate",
+      "source": "FRED/UNRATE",
+      "timestamp": "2026-01-03",
+      "value": 4.2,
+      "unit": "%",
+      "signal": "green",
+      "notes": "Released first Friday of month by BLS"
+    }
+  ],
+  "meta": {
+    "version": 1,
+    "generated_by": "dashboard.py"
+  }
+}

@@ -27,5 +27,19 @@ scoring:
   green_max: 2
   yellow_max: 5
 
+indicators:
+  unrate:
+    id: unrate
+    label: "Unemployment Rate"
+    source: "FRED/UNRATE"
+    series_id: "UNRATE"
+    units: "lin"
+    update_frequency: "monthly"
+    description: "Unemployment Rate, Seasonally Adjusted (%)"
+    thresholds:
+      green_max: 5.0
+      yellow_max: 6.5
+    notes: "Released first Friday of month by BLS"
+
 mock:
   enabled: false
